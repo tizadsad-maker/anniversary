@@ -243,18 +243,23 @@
       to { opacity: 1; transform: scale(1); } 
     }
 
-    /* ── 🌸 หน้าสุดท้ายรองรับ Video เต็มหน้าจอ (Professional Mobile Optimized) ── */
+    /* ── 🌸 หน้าสุดท้ายรองรับ Video แนวนอนครบถ้วน ไม่ซูม ไม่ตัดขอบ (Cinematic Letterbox Style) ── */
     #screen-ending {
       position: fixed;
       top: 0; left: 0; 
-      width: 100dvw;   /* 🟢 ใช้ dvw เพื่อล็อกความกว้างหน้าจอมือถือจริง ไม่โดนแถบเบราว์เซอร์บัง */
-      height: 100dvh; /* 🟢 ใช้ dvh เพื่อป้องกันปัญหายืดหดของแถบที่อยู่เว็บบน iPhone/Android */
+      width: 100dvw;   
+      height: 100dvh; 
       z-index: 100000;
       overflow: hidden;
       opacity: 0;
       pointer-events: none;
       transition: opacity 2s ease-in-out;
-      background-color: #0b0b0b; /* พื้นหลังสีมืดสไตล์โรงภาพยนตร์ช่วยขับวิดีโอให้เด่น */
+      background-color: #000000; /* พื้นหลังสีดำสนิทเพื่อรองรับขอบบน-ล่างให้กลืนเป็นเนื้อเดียวกัน */
+      
+      /* ใช้ระบบ Flexbox บังคับจัดตำแหน่งให้วิดีโอแนวนอนอยู่กึ่งกลางหน้าจอมือถือแนวตั้งพอดีเป๊ะ */
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
     
     #screen-ending.active { 
@@ -263,23 +268,17 @@
     }
 
     .ending-video-bg {
-      position: absolute;
-      top: 50%; left: 50%;
-      width: 100%; height: 100%;
-      transform: translate(-50%, -50%);
-      
-      /* 🟢 ปรับเป็น contain เพื่อให้วิดีโอแนวนอนแสดงได้เต็มสัดส่วน ไม่โดนตัดขอบซ้ายขวาบนมือถือ
-         (หากในอนาคตเปลี่ยนมาใช้วิดีโอที่เป็นแนวตั้ง 9:16 สามารถเปลี่ยนตรงนี้กลับเป็น cover ได้ครับ) */
-      object-fit: contain; 
-      
+      width: 100dvw;      /* บังคับความกว้างให้ชนขอบจอมือถือซ้ายขวาพอดี 100% */
+      height: auto;       /* ปล่อยความสูงคำนวณตามอัตราส่วนจริงของไฟล์วิดีโอ เพื่อป้องกันการซูมหรือครอปเด็ดขาด */
+      max-height: 100dvh;
+      object-fit: contain; /* การันตีว่าเนื้อหาจะแสดงผลครบถ้วนทุกลูกเล่นแน่นอน */
       z-index: 0;
     }
 
     #bg-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      /* 🟢 ปรับเฉดมืดเป็นแบบ Radial ไล่วงกลมจากกลางจอ ช่วยให้ตัวหนังสือเด่นและละมุนตาขึ้น */
-      background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%);
+      background: radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.5) 100%);
       z-index: 1;
       transition: background 3s ease-in-out; 
       pointer-events: none;
@@ -287,29 +286,27 @@
 
     #ending-text {
       position: absolute;
-      bottom: 12%; /* 🟢 ย้ายตำแหน่งลงมาด้านล่าง สไตล์ซับไตเติลหนัง เพื่อไม่ให้บังหน้าคนหรือเนื้อหาสำคัญในวิดีโอ */
+      bottom: 10%; /* ย้ายลงมาที่แถบดำด้านล่างวิดีโอ สไตล์ซับไตเติลภาพยนตร์ ทำให้อ่านง่ายและไม่บังเนื้อหา */
       left: 50%;
       transform: translateX(-50%);
       width: 88%; 
       max-width: 450px;
       color: #ffffff;
       
-      /* 🟢 ใช้ clamp ขนาดอักษรจะยืดหยุ่นปรับขนาดตามความกว้างหน้าจอมือถืออัตโนมัติ */
-      font-size: clamp(15px, 4.2vw, 19px); 
+      font-size: clamp(15px, 4.2vw, 18px); 
       font-weight: 400;
       text-align: center; 
-      line-height: 1.7;
+      line-height: 1.6;
       
-      /* 🟢 เทคนิค Glassmorphism: เพิ่มกรอบกระจกเบลอหลังจาง ๆ สไตล์ iOS 
-         ทำให้อ่านข้อความง่ายขึ้นมาก 100% แม้วิดีโอพื้นหลังจะเป็นสีสว่าง */
-      background: rgba(0, 0, 0, 0.45);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      padding: 16px 22px;
-      border-radius: 18px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      /* เทคนิคกระจกฝ้าหรูหราทำให้อ่านง่ายทุกสภาพแสง */
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      padding: 14px 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
       
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
       z-index: 2;
       transition: opacity 0.5s ease-in-out; 
       pointer-events: none;
@@ -318,10 +315,10 @@
     /* ── 👆 ตัวชี้บอกให้แตะหน้าจอ ── */
     #tap-hint {
       position: absolute;
-      bottom: 44px;
+      bottom: 32px;
       left: 50%;
       transform: translateX(-50%);
-      color: rgba(255, 255, 255, 0.55);
+      color: rgba(255, 255, 255, 0.45);
       font-size: 13px;
       z-index: 3;
       pointer-events: none;
@@ -331,8 +328,8 @@
     }
 
     @keyframes hintPulse {
-      0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
-      50% { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+      0%, 100% { opacity: 0.3; transform: translateX(-50%) translateY(0); }
+      50% { opacity: 0.9; transform: translateX(-50%) translateY(-3px); }
     }
   </style>
 </head>
@@ -444,7 +441,6 @@
       },
     ];
 
-    // 💬 ตรงนี้คือจุดที่คุณสามารถพิมพ์เพิ่มข้อความได้ไม่จำกัดจำนวนครั้งเลยครับ!
     const endingTexts = [
       "ฮั่นแน่กดมาแล้วเค้าไม่ให้เธอไปไหนแล้วนะ", 
       "เราพึ่งจับมือเดินกันไปขั้นแรกเองแต่...", 
@@ -646,7 +642,7 @@
         if (videoElement) {
           videoElement.muted = true; 
           videoElement.currentTime = 0;
-          videoElement.volume = 0;
+          videoElement.volume = 1; /* ปรับระดับเสียงวิดีโอเป็นปกติสูงสุดเมื่อเปิดใช้งาน */
           videoElement.play().then(() => {
             isMediaStarted = true;
           }).catch(e => {
@@ -665,8 +661,6 @@
           }
         }, 80);
 
-        // ⏱️ ตั้งเวลาตัดจบอัตโนมัติที่ 2 นาที 19 วินาที (139,000 มิลลิวินาที)
-        // เริ่มทำการเฟดก่อน 3 วินาที (ที่ 136,000 มิลลิวินาที)
         setTimeout(startFadeOutAndReset, 136000);
 
       }, 1000);
@@ -696,7 +690,6 @@
         setTimeout(function() { tapHint.style.display = 'none'; }, 500);
       }
 
-      // 🔄 ตรวจสอบเงื่อนไขตามจำนวนความยาวจริงใน endingTexts
       if (endingTapCount <= endingTexts.length) {
         textElement.style.opacity = '0';
         setTimeout(function() {
@@ -704,25 +697,22 @@
           textElement.style.opacity = '1';
         }, 500);
       } else {
-        // เมื่อแตะเกินจำนวนประโยคทั้งหมดที่มี ให้ซ่อนข้อความไปเลย (ไม่ต้องกลัวบั๊กตัวหนังสือค้าง)
         textElement.style.opacity = '0';
       }
     }
 
     function startFadeOutAndReset() {
-      canTapEnding = false; // ป้องกันการกดแทรกระหว่างกำลังเฟดจบ
+      canTapEnding = false; 
 
       const overlay = document.getElementById('bg-overlay');
       const videoElement = document.getElementById('my-ending-video');
       const textElement = document.getElementById('ending-text');
       const tapHint = document.getElementById('tap-hint');
       
-      // 1. เฟดหน้าจอให้มืดลง & ซ่อนข้อความทั้งหมด
       overlay.style.background = "rgba(0, 0, 0, 1)";
       textElement.style.opacity = '0'; 
       if (tapHint) tapHint.style.opacity = '0';
 
-      // 2. เฟดเสียงเพลงลดลงช้าๆ (ใช้เวลา 3 วินาที)
       let fadeOutMusic = setInterval(function() {
         if (loveMusic.volume > 0.01) {
           loveMusic.volume -= 0.01;
@@ -733,7 +723,6 @@
         }
       }, 120); 
 
-      // เฟดเสียงวิดีโอลดลงช้าๆ
       if (videoElement) {
         let fadeOutVolume = setInterval(function() {
           if (videoElement.volume > 0.01) {
@@ -746,7 +735,6 @@
         }, 120);
       }
 
-      // 3. หลังจาก 3 วินาที (จอจะดำสนิทและเงียบกริบที่เวลา 2:19 เป๊ะ) -> เด้งกลับหน้าแรก
       setTimeout(resetToMainMenu, 3000);
     }
 
@@ -756,22 +744,17 @@
       const textElement = document.getElementById('ending-text');
       const tapHint = document.getElementById('tap-hint');
       
-      // เตรียมหน้าแรก (Intro) รอไว้ข้างหลัง
       showScreen('intro');
-      
-      // เอาคลาส active ออก เพื่อให้จอสีดำค่อยๆ สว่างขึ้นและเห็นหน้าแรก (CSS animation 2 วิ)
       ending.classList.remove('active');
       
-      // รอให้จอเฟดสว่างจนสนิท (2 วิ) แล้วเซ็ตระบบทั้งหมดกลับเป็นค่าเริ่มต้น
       setTimeout(function() {
-        overlay.style.background = "rgba(0, 0, 0, 0.35)";
+        overlay.style.background = "radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.5) 100%)";
         textElement.textContent = endingTexts[0];
         textElement.style.opacity = '1';
         if (tapHint) {
           tapHint.style.display = 'block';
         }
         
-        // รีเซ็ตตัวแปรเพื่อพร้อมเล่นใหม่
         endingTapCount = 1;
         canTapEnding = true;
         isMediaStarted = false;
