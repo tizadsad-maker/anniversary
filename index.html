@@ -243,16 +243,18 @@
       to { opacity: 1; transform: scale(1); } 
     }
 
-    /* ── 🌸 หน้าสุดท้ายรองรับ Video เต็มหน้าจอ ── */
+    /* ── 🌸 หน้าสุดท้ายรองรับ Video เต็มหน้าจอ (Professional Mobile Optimized) ── */
     #screen-ending {
       position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
+      top: 0; left: 0; 
+      width: 100dvw;   /* 🟢 ใช้ dvw เพื่อล็อกความกว้างหน้าจอมือถือจริง ไม่โดนแถบเบราว์เซอร์บัง */
+      height: 100dvh; /* 🟢 ใช้ dvh เพื่อป้องกันปัญหายืดหดของแถบที่อยู่เว็บบน iPhone/Android */
       z-index: 100000;
       overflow: hidden;
       opacity: 0;
       pointer-events: none;
       transition: opacity 2s ease-in-out;
-      background-color: #000000;
+      background-color: #0b0b0b; /* พื้นหลังสีมืดสไตล์โรงภาพยนตร์ช่วยขับวิดีโอให้เด่น */
     }
     
     #screen-ending.active { 
@@ -265,14 +267,19 @@
       top: 50%; left: 50%;
       width: 100%; height: 100%;
       transform: translate(-50%, -50%);
-      object-fit: cover; 
+      
+      /* 🟢 ปรับเป็น contain เพื่อให้วิดีโอแนวนอนแสดงได้เต็มสัดส่วน ไม่โดนตัดขอบซ้ายขวาบนมือถือ
+         (หากในอนาคตเปลี่ยนมาใช้วิดีโอที่เป็นแนวตั้ง 9:16 สามารถเปลี่ยนตรงนี้กลับเป็น cover ได้ครับ) */
+      object-fit: contain; 
+      
       z-index: 0;
     }
 
     #bg-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.35);
+      /* 🟢 ปรับเฉดมืดเป็นแบบ Radial ไล่วงกลมจากกลางจอ ช่วยให้ตัวหนังสือเด่นและละมุนตาขึ้น */
+      background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%);
       z-index: 1;
       transition: background 3s ease-in-out; 
       pointer-events: none;
@@ -280,16 +287,29 @@
 
     #ending-text {
       position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 85%; 
-      max-width: 600px;
+      bottom: 12%; /* 🟢 ย้ายตำแหน่งลงมาด้านล่าง สไตล์ซับไตเติลหนัง เพื่อไม่ให้บังหน้าคนหรือเนื้อหาสำคัญในวิดีโอ */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 88%; 
+      max-width: 450px;
       color: #ffffff;
-      font-size: clamp(18px, 5vw, 24px); 
-      font-weight: 500;
+      
+      /* 🟢 ใช้ clamp ขนาดอักษรจะยืดหยุ่นปรับขนาดตามความกว้างหน้าจอมือถืออัตโนมัติ */
+      font-size: clamp(15px, 4.2vw, 19px); 
+      font-weight: 400;
       text-align: center; 
-      line-height: 1.9;
-      text-shadow: 0 3px 16px rgba(0, 0, 0, 0.9), 0 0 12px rgba(232, 84, 122, 0.4);
+      line-height: 1.7;
+      
+      /* 🟢 เทคนิค Glassmorphism: เพิ่มกรอบกระจกเบลอหลังจาง ๆ สไตล์ iOS 
+         ทำให้อ่านข้อความง่ายขึ้นมาก 100% แม้วิดีโอพื้นหลังจะเป็นสีสว่าง */
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 16px 22px;
+      border-radius: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
       z-index: 2;
       transition: opacity 0.5s ease-in-out; 
       pointer-events: none;
@@ -652,7 +672,6 @@
       }, 1000);
     }
 
-    // ✨ จุดที่แก้ไข: ปรับปรุงฟังก์ชันนับการคลิกหน้าจบให้คำนวณตามจำนวนข้อความอัตโนมัติ
     function handleEndingTap() {
       if (!canTapEnding) return; 
 
