@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>คำถามง่ายๆ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', sans-serif;
+      background: #fdf0f4;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 24px 16px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 24px;
+      padding: 32px 24px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* ── หน้าแรก ── */
+    #screen-intro h1 { font-size: 28px; color: #2d1a24; margin-bottom: 8px; }
+    #screen-intro p  { font-size: 15px; color: #9b7a88; margin-bottom: 28px; }
+
+    /* ── หน้าคำถาม ── */
+    .q-number { font-size: 13px; color: #e8547a; font-weight: 600;
+                letter-spacing: .08em; margin-bottom: 12px; }
+    .q-emoji  { font-size: 44px; margin-bottom: 14px; display: block; }
+    .q-text   { font-size: 17px; font-weight: 500; color: #2d1a24;
+                line-height: 1.55; margin-bottom: 24px; }
+
+    .choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+
+    .choice {
+      padding: 14px 18px;
+      background: white;
+      border: 1.5px solid #f7d6e3;
+      border-radius: 14px;
+      font-family: 'Sarabun', sans-serif;
+      font-size: 15px;
+      color: #2d1a24;
+      text-align: left;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .choice:hover   { background: #fce7ef; border-color: #e8547a; }
+    .choice.correct { background: #e8f5e9; border-color: #4caf50; color: #1b5e20; }
+    .choice.wrong   { background: #fce4ec; border-color: #e91e63; color: #880e4f; }
+    .choice:disabled { cursor: default; }
+
+    .feedback {
+      font-size: 14px; color: #9b7a88;
+      line-height: 1.6; min-height: 24px;
+      margin-bottom: 16px;
+    }
+
+    /* ── หน้าผลลัพธ์ ── */
+    #screen-result .big-emoji { font-size: 56px; margin-bottom: 12px; display: block; }
+    #screen-result h2 { font-size: 22px; color: #2d1a24; margin-bottom: 8px; }
+    #screen-result .score-pill {
+      display: inline-block;
+      background: #fce7ef; color: #9d174d;
+      font-size: 15px; font-weight: 600;
+      padding: 6px 20px; border-radius: 99px; margin-bottom: 16px;
+    }
+    #screen-result .result-msg {
+      font-size: 14px; color: #9b7a88;
+      line-height: 1.75; margin-bottom: 24px;
+    }
+
+    /* ── ปุ่มทั่วไป ── */
+    .btn {
+      display: block; width: 100%; padding: 14px;
+      background: #e8547a; color: white; border: none;
+      border-radius: 14px; font-family: 'Sarabun', sans-serif;
+      font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px;
+    }
+    .btn:active { background: #c03060; }
+
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- หน้าแรก -->
+  <div id="screen-intro">
+    <h1>วันครบรอบ</h1>
+    <p>มาทดสอบความรู้ใจกันที่ร๊ากก</p>
+    <button class="btn" onclick="startGame()">อยากลองแล้ว→</button>
+  </div>
+
+  <!-- หน้าคำถาม -->
+  <div id="screen-quiz" class="hidden">
+    <div class="q-number" id="q-number">ข้อ 1 / 5</div>
+    <span class="q-emoji" id="q-emoji">💭</span>
+    <div class="q-text" id="q-text"></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="btn hidden" id="btn-next" onclick="nextQuestion()">ถัดไป →</button>
+  </div>
+
+  <!-- หน้าผลลัพธ์ -->
+  <div id="screen-result" class="hidden">
+    <span class="big-emoji" id="result-emoji">🎉</span>
+    <h2 id="result-title">ยอดเยี่ยม!</h2>
+    <div class="score-pill" id="result-score">5 / 5</div>
+    <div class="result-msg" id="result-msg"></div>
+    <button class="btn" onclick="startGame()">เล่นอีกครั้ง 🔄</button>
+  </div>
+
+</div>
+
+<script>
+  // ══════════════════════════════
+  //  คลังคำถาม — แก้ตรงนี้ได้เลย!
+  // ══════════════════════════════
+  const questions = [
+    {
+      emoji: '💑',
+      text: 'วันแรกที่ไปรับเธอเค้าใส่ชุดสีอะไร',
+      choices: ['สีดำ', 'สีขาว', 'สีฟ้า', 'สีแดง'],
+      correct: 0,
+      feedback: '✅ จำได้ด้วยเหย๋ออเก่งมั๊กเลอออ'
+    },
+    {
+      emoji: '🌹',
+      text: 'อีกกี่วันเราถึงจะเจอกัน',
+      choices: ['14', '5', '2', '7'],
+      correct: 3,
+      feedback: '✅ เย้อ้วนเค้าเก่งจังเลยจำได้ด้วยย'
+    },
+    {
+      emoji: '🧠',
+      text: 'ต่างประเทศที่เราอยากไปด้วยกันคือประเทศอะไร~~',
+      choices: ['เกาหลีเหนือ', 'ญี่ปุ่น', 'แอฟฟริกาใต้', 'ปารีส'],
+      correct: 1,
+      feedback: '✅ เค้าอยากไปญี่ปุ่นกับเธอนะรอหน่อย...'
+    },
+    {
+      emoji: '🗼',
+      text: 'ประโยคแรกที่เค้าทักหาเธอตั้งแต่วันแรกที่คุยกันคือ~~~',
+      choices: ['อ้วนของเค้า', 'พี่สาวฉุดฉวย', 'พี่คนสวย', 'ทักคั้บ'],
+      correct: 3,
+      feedback: '✅ โครตเอ่อคำทักแรกที่เค้าทักเธอ5555'
+    },
+    {
+      emoji: '💍',
+      text: 'เธอคือของใครกันน๊ะ?',
+      choices: ['สุดหล่อจากเขมร', 'เค้า', 'สุลต่านจากดูไบ', 'เทพพระบุตรขี่มังกร'],
+      correct: 1,
+      feedback: '✅ หึ้ยเก่งจังเลยไอดื้ออรู้ตัวเองด้วยว่าของใคร 💗'
+    }
+  ]
+
+  // ══════════════════════════════
+  //  ตัวแปรเก็บสถานะเกม
+  // ══════════════════════════════
+  let currentQ = 0   // คำถามข้อปัจจุบัน
+  let score = 0      // คะแนน
+  let answered = false  // กันกดซ้ำ
+
+  // ══════════════════════════════
+  //  ฟังก์ชันเริ่มเกม
+  // ══════════════════════════════
+  function startGame() {
+    currentQ = 0
+    score = 0
+    showScreen('quiz')
+    loadQuestion()
+  }
+
+  // ══════════════════════════════
+  //  โหลดคำถาม
+  // ══════════════════════════════
+  function loadQuestion() {
+    answered = false
+    const q = questions[currentQ]
+
+    // อัปเดตตัวเลขข้อ
+    document.getElementById('q-number').textContent =
+      `ข้อ ${currentQ + 1} / ${questions.length}`
+
+    // ใส่ emoji และคำถาม
+    document.getElementById('q-emoji').textContent = q.emoji
+    document.getElementById('q-text').textContent  = q.text
+
+    // ล้าง feedback และซ่อนปุ่มถัดไป
+    document.getElementById('feedback').textContent = ''
+    document.getElementById('btn-next').classList.add('hidden')
+
+    // สร้างปุ่มตัวเลือก
+    const box = document.getElementById('choices')
+    box.innerHTML = ''  // ล้างของเก่า
+    const letters = ['A', 'B', 'C', 'D']
+
+    q.choices.forEach(function(text, index) {
+      const btn = document.createElement('button')
+      btn.className = 'choice'
+      btn.textContent = letters[index] + '.  ' + text
+      btn.onclick = function() { pickAnswer(index) }
+      box.appendChild(btn)
+    })
+  }
+
+  // ══════════════════════════════
+  //  เมื่อผู้เล่นเลือกคำตอบ
+  // ══════════════════════════════
+  function pickAnswer(index) {
+    if (answered) return   // ถ้าตอบไปแล้วห้ามกดอีก
+    answered = true
+
+    const q = questions[currentQ]
+    const buttons = document.querySelectorAll('.choice')
+
+    // ปิดปุ่มทั้งหมด
+    buttons.forEach(function(btn) { btn.disabled = true })
+
+    if (index === q.correct) {
+      // ตอบถูก
+      buttons[index].classList.add('correct')
+      score++
+      document.getElementById('feedback').textContent = q.feedback
+    } else {
+      // ตอบผิด
+      buttons[index].classList.add('wrong')
+      buttons[q.correct].classList.add('correct')
+      document.getElementById('feedback').textContent =
+        '💡 เฉลย: ' + q.choices[q.correct]
+    }
+
+    // แสดงปุ่มถัดไป
+    const nextBtn = document.getElementById('btn-next')
+    nextBtn.classList.remove('hidden')
+    nextBtn.textContent =
+      currentQ < questions.length - 1 ? 'ถัดไป →' : 'ดูผลลัพธ์ 💌'
+  }
+
+  // ══════════════════════════════
+  //  ไปคำถามถัดไป
+  // ══════════════════════════════
+  function nextQuestion() {
+    currentQ++
+    if (currentQ < questions.length) {
+      loadQuestion()
+    } else {
+      showResult()
+    }
+  }
+
+  // ══════════════════════════════
+  //  แสดงผลลัพธ์
+  // ══════════════════════════════
+  function showResult() {
+    showScreen('result')
+    const total = questions.length
+    document.getElementById('result-score').textContent =
+      score + ' / ' + total + ' คะแนน'
+
+    let emoji, title, msg
+    if (score === total) {
+      emoji = '👑'; title = 'ราชาแห่งความรัก!'
+      msg = 'เพอร์เฟกต์! คุณรู้เรื่องความรักดีมากเลย 💕'
+    } else if (score >= 3) {
+      emoji = '💖'; title = 'นักรักตัวยง!'
+      msg = 'เยี่ยมมาก! ยังมีบางเรื่องให้เรียนรู้อีกนิดหน่อย 🌸'
+    } else {
+      emoji = '🌱'; title = 'นักรักมือใหม่!'
+      msg = 'ไม่เป็นไร! ความรักไม่ได้อยู่ที่คะแนน อยู่ที่หัวใจ 💌'
+    }
+
+    document.getElementById('result-emoji').textContent = emoji
+    document.getElementById('result-title').textContent = title
+    document.getElementById('result-msg').textContent   = msg
+  }
+
+  // ══════════════════════════════
+  //  สลับหน้า (intro / quiz / result)
+  // ══════════════════════════════
+  function showScreen(name) {
+    document.getElementById('screen-intro').classList.add('hidden')
+    document.getElementById('screen-quiz').classList.add('hidden')
+    document.getElementById('screen-result').classList.add('hidden')
+    document.getElementById('screen-' + name).classList.remove('hidden')
+  }
+</script>
+</body>
+</html>
