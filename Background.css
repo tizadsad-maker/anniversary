@@ -1,0 +1,47 @@
+body {
+  font-family: 'Sarabun', sans-serif;
+  
+  /* 🍓 ไล่เฉดสีสตรอว์เบอร์รี + เพิ่มแพทเทิร์นดอกไม้ (🌸, 🌷) กระจายซ้ำทั่วทั้งหน้าจอแบบละมุนตา */
+  background-image: 
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Ctext x='30' y='60' font-size='24' opacity='0.2'%3E%F0%9F%8C%B8%3C/text%3E%3Ctext x='120' y='140' font-size='20' opacity='0.2'%3E%F0%9F%8C%B7%3C/text%3E%3C/svg%3E"),
+    linear-gradient(135deg, #ffccd5 0%, #fde2e4 50%, #fff0f3 100%);
+  
+  background-attachment: fixed; /* ตรึงให้พื้นหลังและดอกไม้กระจายอยู่กับที่เวลาเลื่อนหน้าจอ */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 24px 16px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 🌸 ดอกไม้ดุ๊กดิ๊กตัวเด่น มุมซ้ายบน */
+body::before {
+  content: '🌸';
+  position: fixed;
+  top: 8%;
+  left: 6%;
+  font-size: 36px;
+  opacity: 0.6;
+  pointer-events: none;
+  animation: floatFlower 3s ease-in-out infinite alternate;
+}
+
+/* 🌷 ดอกไม้ดุ๊กดิ๊กตัวเด่น มุมขวาล่าง */
+body::after {
+  content: '🌷';
+  position: fixed;
+  bottom: 10%;
+  right: 6%;
+  font-size: 36px;
+  opacity: 0.6;
+  pointer-events: none;
+  animation: floatFlower 3.5s ease-in-out infinite alternate-reverse;
+}
+
+/* 🔄 แอนิเมชันขยับขึ้นลงเอียงๆ ของดอกไม้ตัวเด่น */
+@keyframes floatFlower {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(-10px) rotate(15deg); }
+}

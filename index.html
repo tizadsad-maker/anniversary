@@ -23,6 +23,8 @@
       align-items: center;
       min-height: 100vh;
       font-family: 'Sarabun', sans-serif;
+      background-color: #000000;
+      overflow-x: hidden;
     }
 
     /* ── กล่อง Card หลัก ── */
@@ -93,9 +95,10 @@
       cursor: pointer;
       transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.2s ease-out, box-shadow 0.2s;
       position: relative; 
+      width: 100%;
     }
 
-    /* ✨ Hover ปุ๊มเด้งดุ๊กดิ๊ก */
+    /* ✨ Hover ปุ่มเด้งดุ๊กดิ๊ก */
     .choice:not(:disabled):hover {
       background: #fce7ef;
       border-color: #e8547a;
@@ -240,7 +243,7 @@
       to { opacity: 1; transform: scale(1); } 
     }
 
-    /* ── 🌸 หน้าสุดท้าย (พื้นหลัง + ข้อความ + เพลง) ── */
+    /* ── 🌸 หน้าสุดท้ายรองรับ Video เต็มหน้าจอ ── */
     #screen-ending {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -249,6 +252,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 2s ease-in-out;
+      background-color: #000000;
     }
     
     #screen-ending.active { 
@@ -256,29 +260,24 @@
       pointer-events: auto; 
     }
 
-    /* รูป slideshow แต่ละรูปซ้อนกัน เฟดสลับ */
-    .slide-bg {
+    .ending-video-bg {
       position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      opacity: 0;
-      transition: opacity 2s ease-in-out;
-    }
-    
-    .slide-bg.visible { 
-      opacity: 1; 
+      top: 50%; left: 50%;
+      width: 100%; height: 100%;
+      transform: translate(-50%, -50%);
+      object-fit: cover; 
+      z-index: 0;
     }
 
     #bg-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.45);
+      background: rgba(0, 0, 0, 0.35);
       z-index: 1;
+      transition: background 3s ease-in-out; 
+      pointer-events: none;
     }
 
-    /* ส่วนระบบความโปร่งใสและแอนิเมชันให้ข้อความ */
     #ending-text {
       position: absolute;
       top: 50%; left: 50%;
@@ -286,19 +285,34 @@
       width: 85%; 
       max-width: 600px;
       color: #ffffff;
-      font-size: 24px; 
+      font-size: clamp(18px, 5vw, 24px); 
       font-weight: 500;
       text-align: center; 
       line-height: 1.9;
       text-shadow: 0 3px 16px rgba(0, 0, 0, 0.9), 0 0 12px rgba(232, 84, 122, 0.4);
       z-index: 2;
-      opacity: 0; 
-      transition: opacity 1s ease-in-out;
+      transition: opacity 0.5s ease-in-out; 
+      pointer-events: none;
     }
-    
-    /* คลาสสำหรับสั่งโชว์ข้อความให้เฟดขึ้นมา */
-    #ending-text.show {
-      opacity: 1;
+
+    /* ── 👆 ตัวชี้บอกให้แตะหน้าจอ ── */
+    #tap-hint {
+      position: absolute;
+      bottom: 44px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.55);
+      font-size: 13px;
+      z-index: 3;
+      pointer-events: none;
+      animation: hintPulse 2s ease-in-out infinite;
+      transition: opacity 0.5s ease;
+      white-space: nowrap;
+    }
+
+    @keyframes hintPulse {
+      0%, 100% { opacity: 0.4; transform: translateX(-50%) translateY(0); }
+      50% { opacity: 1; transform: translateX(-50%) translateY(-4px); }
     }
   </style>
 </head>
@@ -312,7 +326,7 @@
     </div>
 
     <div id="screen-quiz" class="hidden">
-      <div class="q-number" id="q-number">ข้อ 1 / 5</div>
+      <div class="q-number" id="q-number">ข้อ 1 / 10</div>
       <span class="q-emoji" id="q-emoji">💭</span>
       <div class="q-text" id="q-text"></div>
       <div class="choices" id="choices"></div>
@@ -326,19 +340,20 @@
     <button class="circle-btn" id="btn-heart" onclick="triggerSurprise()"></button>
   </div>
 
-  <div id="screen-ending">
-    <div id="bg-container"></div>
+  <div id="screen-ending" onclick="handleEndingTap()">
+    <video id="my-ending-video" class="ending-video-bg" webkit-playsinline playsinline autoplay muted loop preload="auto">
+      <source src="Videoend.mp4" type="video/mp4">
+      <source src="videoend.mp4" type="video/mp4">
+    </video>
     <div id="bg-overlay"></div>
-    <div id="ending-text"></div>
+    <div id="ending-text">ฮั่นแน่กดมาแล้วเค้าไม่ให้เธอไปไหนแล้วนะ</div>
+    <div id="tap-hint">แตะเพื่ออ่านต่อ ✨</div>
   </div>
 
   <script>
-    // ══════════════════════════════
-    //  คลังคำถามควิซความรัก (10 ข้อ)
-    // ══════════════════════════════
     const questions = [
       {
-        emoji: '💑',
+        emoji: '👩‍❤️‍💋‍👨',
         text: 'วันแรกที่ไปรับเธอเค้าใส่ชุดสีอะไร',
         choices: ['สีดำ', 'สีขาว', 'สีฟ้า', 'สีแดง'],
         correct: 0,
@@ -363,7 +378,7 @@
         text: 'ประโยคแรกที่เค้าทักหาเธอตั้งแต่วันแรกที่คุยกันคือ~~~',
         choices: ['อ้วนของเค้า', 'พี่สาวฉุดฉวย', 'พี่คนสวย', 'ทักคั้บ'],
         correct: 3,
-        feedback: '✅ โครตเอ๋อคำทักแรกที่เค้าทักเธอ5555'
+        feedback: '✅ โครตเอ่อคำทักแรกที่เค้าทักเธอ5555'
       },
       {
         emoji: '💍💗',
@@ -389,13 +404,13 @@
       {
         emoji: '😏', 
         text: 'วันแรกที่คบกันคือวันที่',
-        choices: ['วันที่ 18 มกราคม', '15 พฤษภาคม', '5 มกราคม', '15 มิถุนายน'],
+        choices: [' 18 มกราคม', '15 พฤษภาคม', '5 มกราคม', '15 มิถุนายน'],
         correct: 1,
-        feedback: '✅ จำผิดซวยนะว่านนะ'
+        feedback: '✅ เย้ๆคนสวยของเค้าเก่งจังเลยคั้บ'
       },
       {
         emoji: '😁', 
-        text: 'ถ้าเจอกันเราจะได้ทำอะไร',
+        text: 'ถ้าเจอกันเราจะได้ทำอะไรอะไร',
         choices: ['กินข้าว', 'ดีดลูกแก้ว', 'เล่นชักเย่อ', 'ผีผ้าห่มกับจูเนียร์'],
         correct: 0,
         feedback: '✅ รู้นะว่าจะกดผีผ้าห่มอะ อุบาด🤣🤣'
@@ -404,24 +419,21 @@
         emoji: '😁', 
         text: 'รักเติ้ลมั้ย',
         choices: ['ไม่ รักนะ', 'ไม่ โครตรักเลย', 'รัก', 'รักสุดๆ'],
-        correct: 0,
-        feedback: '✅ น่ารักจังเลยรักเติ้ล🤣🤣'
-      }
+        correct: [0, 1, 2, 3], 
+        feedback: '✅ น่ารักจังเลยว่านรักไอเติ้ล🤣🤣'
+      },
     ];
 
-    // ══════════════════════════════
-    //  รายชื่อไฟล์รูปภาพทำสไลด์โชว์พื้นหลัง
-    // ══════════════════════════════
-    const myImages = [
-      '1.png', '2.png', '3.png', '4.png', '5.png',
-      '6.png', '7.png', '8.png', '9.png', '10.png',
-      '11.png', '12.png', '13.png', '14.png', '15.png',
-      '16.png', '17.png', '18.png', '19.png', '20.png'
+    // 💬 ตรงนี้คือจุดที่คุณสามารถพิมพ์เพิ่มข้อความได้ไม่จำกัดจำนวนครั้งเลยครับ!
+    const endingTexts = [
+      "ฮั่นแน่กดมาแล้วเค้าไม่ให้เธอไปไหนแล้วนะ", 
+      "เราพึ่งจับมือเดินกันไปขั้นแรกเองแต่...", 
+      "เค้ามีความสุขมากๆเลยเวลาที่ได้คุยและได้อยู่กับเธอ", 
+      "ยังมีเรื่องที่เค้าอยากจะทำกับเธออีกเยอะเลยไปด้วยกันนะเธอจับมือกันไปเรื่อยๆ",
+      "หวังว่าทำขนาดนี้ต้องได้สักยิ้มจากอ้วนบ้าง~~",
+      "เค้ารักเธอนะเดี๋ยว22ขอกอดทีนะ รักเธอนะ💗" 
     ];
 
-    // ══════════════════════════════
-    //  ตัวสร้างระบบเสียงเอฟเฟกต์และเพลงควิซ
-    // ══════════════════════════════
     const bgMusic = new Audio('bgm.mp3');         
     bgMusic.loop = true;                          
     bgMusic.volume = 0.25;                        
@@ -429,91 +441,24 @@
     const catchSound = new Audio('catch.mp3');     
     const correctSound = new Audio('correct.mp3'); 
     const wrongSound = new Audio('wrong.mp3');
-    
     const heartbeatSound = new Audio('heartbeat.mp3');
     heartbeatSound.loop = true;
     heartbeatSound.volume = 0.7;
 
     const loveMusic = new Audio('love.mp3');
-    loveMusic.loop = false; // 🎵 ปิดระบบวนลูปเพื่อให้เล่นรอบเดียวจบตามต้องการ
+    loveMusic.loop = true;
     loveMusic.volume = 0; 
 
-    // ══════════════════════════════
-    //  💬 ระบบข้อความตอนจบ 5 ประโยค (ประโยคละ 12 วิ)
-    // ══════════════════════════════
-    const endingSentences = [
-      "ฮั่นแน่กดมาแล้วเค้าไม่ให้เธอไปไหนแล้วนะ",   
-      "ขอบคุณนะเธอขนาดนี้แค่เดือนเดียวเองแต่เจอกันสาหัสจัด",     
-      "แต่เค้าไม่ให้ไปไหนแล้วนะเค้าจะกอดเธอให้แน่นเอาให้ไปไหนไม่ได้เลออ",     
-      "ครบรอบ 1 เดือนแล้วเอาไปเท่านี้ก่อนมีเซอร์ไพรส์อีกชิ้นรออยู่วันที่ 22",     
-      "รักเธอนะอ้วน💗"
-    ];
-    
-    let currentSentenceIdx = 0;
-    let slideIdx = 0;
-    let slideTimer = null;
     let currentQ = 0;
     let score = 0;
     let answered = false;
     let wrongCount = 0;
     let correctClickCount = 0;
 
-    // ══════════════════════════════
-    //  ฟังก์ชันจัดการระบบสไลด์ภาพพื้นหลัง
-    // ══════════════════════════════
-    function startSlideshow() {
-      const container = document.getElementById('bg-container');
-      container.innerHTML = '';
+    let endingTapCount = 1; 
+    let canTapEnding = true;
+    let isMediaStarted = false; 
 
-      myImages.forEach(function(src, i) {
-        const div = document.createElement('div');
-        div.className = 'slide-bg' + (i === 0 ? ' visible' : '');
-        div.style.backgroundImage = "url('" + src + "')";
-        container.appendChild(div);
-      });
-
-      slideTimer = setInterval(function() {
-        const slides = document.querySelectorAll('.slide-bg');
-        if (slides.length <= 1) return;
-        slides[slideIdx].classList.remove('visible');
-        slideIdx = (slideIdx + 1) % slides.length;
-        slides[slideIdx].classList.add('visible');
-      }, 4000);
-    }
-
-    // ══════════════════════════════
-    //  ฟังก์ชันแอนิเมชันลำดับข้อความบอกรักตอนท้าย
-    // ══════════════════════════════
-    function startEndingTextSequence() {
-      const textElement = document.getElementById('ending-text');
-      
-      // เมื่อแสดงครบจนถึงประโยคสุดท้าย (ประโยคที่ 5) ให้รันการแสดงผลแล้วเฟดออกเหมือนข้อความอื่น
-      if (currentSentenceIdx >= endingSentences.length) {
-          return; // จบลำดับข้อความทั้งหมด ปล่อยให้พื้นหลังรันต่อจนเพลงจบ
-      }
-
-      // 1. เปลี่ยนข้อความเป็นประโยคปัจจุบัน
-      textElement.innerHTML = endingSentences[currentSentenceIdx];
-      
-      // 2. เฟดข้อความเข้ามาให้เห็น
-      textElement.classList.add('show');
-
-      // 3. ตั้งเวลา 11 วินาที เพื่อเริ่มเฟดข้อความออก
-      setTimeout(() => {
-        textElement.classList.remove('show'); // เริ่มเฟดออก
-        
-        // 4. รอให้เฟดออกจนสนิท (1 วินาที) แล้วจัดการเงื่อนไขต่อไป
-        setTimeout(() => {
-          currentSentenceIdx++;
-          startEndingTextSequence(); // เรียกตัวเองเพื่อแสดงประโยคถัดไป หรือปิดลูปเมื่อหมด
-        }, 1000);
-        
-      }, 11000); // 11 วิ (แสดง) + 1 วิ (เฟดออก) = 12 วินาทีต่อ 1 รอบ
-    }
-
-    // ══════════════════════════════
-    //  ฟังก์ชันแกนหลักควบคุมควิซและการเปลี่ยนผ่านหน้าจอ
-    // ══════════════════════════════
     function startGame() {
       currentQ = 0;
       score = 0;
@@ -559,8 +504,9 @@
 
       const q = questions[currentQ];
       const buttons = document.querySelectorAll('.choice');
+      const isCorrect = Array.isArray(q.correct) ? q.correct.includes(index) : index === q.correct;
 
-      if (index === q.correct) {
+      if (isCorrect) {
         correctClickCount++;
 
         if (correctClickCount <= 5) {
@@ -568,14 +514,17 @@
           catchSound.play().catch(e => console.log("Audio error"));
 
           const targetBtn = buttons[index];
-          const maxX = window.innerWidth - 160;
+          
+          const maxX = window.innerWidth - 180;
           const maxY = window.innerHeight - 80;
-          const randomX = Math.max(10, Math.floor(Math.random() * maxX));
-          const randomY = Math.max(10, Math.floor(Math.random() * maxY));
+          
+          const randomX = Math.max(20, Math.min(maxX, Math.floor(Math.random() * maxX)));
+          const randomY = Math.max(20, Math.min(maxY, Math.floor(Math.random() * maxY)));
 
           targetBtn.style.position = 'fixed';
           targetBtn.style.left = randomX + 'px';
           targetBtn.style.top = randomY + 'px';
+          targetBtn.style.width = '160px'; 
           targetBtn.style.zIndex = '9999';
           
           document.getElementById('feedback').textContent = 'จับให้ได้สิ้! 😜';
@@ -589,6 +538,7 @@
             btn.style.position = '';
             btn.style.left = '';
             btn.style.top = '';
+            btn.style.width = '';
           });
 
           buttons[index].classList.add('correct');
@@ -639,7 +589,7 @@
 
       let fadeOutInterval = setInterval(function() {
         if (bgMusic.volume > 0.02) {
-          bgMusic.volume -= 0.02;
+          bgMusic.volume -= 0.02; 
         } else {
           bgMusic.pause();
           bgMusic.volume = 0.25; 
@@ -668,20 +618,24 @@
 
       setTimeout(function() {
         surpriseScreen.style.display = 'none';
-
         const ending = document.getElementById('screen-ending');
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() {
-            ending.classList.add('active');
-            startSlideshow(); 
-            setTimeout(startEndingTextSequence, 1000); 
-          });
-        });
+        const videoElement = document.getElementById('my-ending-video');
 
-        // เล่นเพลงหลักตอนท้ายแบบไม่ลูป
+        ending.classList.add('active');
+
+        if (videoElement) {
+          videoElement.muted = true; 
+          videoElement.currentTime = 0;
+          videoElement.volume = 0;
+          videoElement.play().then(() => {
+            isMediaStarted = true;
+          }).catch(e => {
+            console.log("Autoplay waiting for tap gesture.");
+          });
+        }
+
         loveMusic.currentTime = 0;
         loveMusic.play().catch(e => console.log('love music blocked'));
-        
         let fadeIn = setInterval(function() {
           if (loveMusic.volume < 0.23) {
             loveMusic.volume = Math.min(0.25, loveMusic.volume + 0.01);
@@ -691,12 +645,118 @@
           }
         }, 80);
 
-        // 🚨 ตรวจจับจังหวะเมื่อเพลงเล่นจบแทร็ก ให้เด้งออกจากหน้าเว็บไปยังหน้าว่างทันที
-        loveMusic.onended = function() {
-          window.location.href = "about:blank";
-        };
+        // ⏱️ ตั้งเวลาตัดจบอัตโนมัติที่ 2 นาที 19 วินาที (139,000 มิลลิวินาที)
+        // เริ่มทำการเฟดก่อน 3 วินาที (ที่ 136,000 มิลลิวินาที)
+        setTimeout(startFadeOutAndReset, 136000);
 
       }, 1000);
+    }
+
+    // ✨ จุดที่แก้ไข: ปรับปรุงฟังก์ชันนับการคลิกหน้าจบให้คำนวณตามจำนวนข้อความอัตโนมัติ
+    function handleEndingTap() {
+      if (!canTapEnding) return; 
+
+      const textElement = document.getElementById('ending-text'); 
+      const videoElement = document.getElementById('my-ending-video');
+      const tapHint = document.getElementById('tap-hint');
+
+      if (!isMediaStarted) {
+        isMediaStarted = true;
+        if (videoElement) {
+          videoElement.muted = false;
+          videoElement.play().catch(e => console.log("Video fail"));
+        }
+        loveMusic.play().catch(e => console.log("Music fail"));
+        loveMusic.volume = 0.25;
+      }
+
+      endingTapCount++; 
+
+      if (tapHint && endingTapCount === 2) {
+        tapHint.style.opacity = '0';
+        setTimeout(function() { tapHint.style.display = 'none'; }, 500);
+      }
+
+      // 🔄 ตรวจสอบเงื่อนไขตามจำนวนความยาวจริงใน endingTexts
+      if (endingTapCount <= endingTexts.length) {
+        textElement.style.opacity = '0';
+        setTimeout(function() {
+          textElement.textContent = endingTexts[endingTapCount - 1];
+          textElement.style.opacity = '1';
+        }, 500);
+      } else {
+        // เมื่อแตะเกินจำนวนประโยคทั้งหมดที่มี ให้ซ่อนข้อความไปเลย (ไม่ต้องกลัวบั๊กตัวหนังสือค้าง)
+        textElement.style.opacity = '0';
+      }
+    }
+
+    function startFadeOutAndReset() {
+      canTapEnding = false; // ป้องกันการกดแทรกระหว่างกำลังเฟดจบ
+
+      const overlay = document.getElementById('bg-overlay');
+      const videoElement = document.getElementById('my-ending-video');
+      const textElement = document.getElementById('ending-text');
+      const tapHint = document.getElementById('tap-hint');
+      
+      // 1. เฟดหน้าจอให้มืดลง & ซ่อนข้อความทั้งหมด
+      overlay.style.background = "rgba(0, 0, 0, 1)";
+      textElement.style.opacity = '0'; 
+      if (tapHint) tapHint.style.opacity = '0';
+
+      // 2. เฟดเสียงเพลงลดลงช้าๆ (ใช้เวลา 3 วินาที)
+      let fadeOutMusic = setInterval(function() {
+        if (loveMusic.volume > 0.01) {
+          loveMusic.volume -= 0.01;
+        } else {
+          loveMusic.pause();
+          loveMusic.volume = 0;
+          clearInterval(fadeOutMusic);
+        }
+      }, 120); 
+
+      // เฟดเสียงวิดีโอลดลงช้าๆ
+      if (videoElement) {
+        let fadeOutVolume = setInterval(function() {
+          if (videoElement.volume > 0.01) {
+            videoElement.volume -= 0.01;
+          } else {
+            videoElement.pause();
+            videoElement.volume = 0;
+            clearInterval(fadeOutVolume);
+          }
+        }, 120);
+      }
+
+      // 3. หลังจาก 3 วินาที (จอจะดำสนิทและเงียบกริบที่เวลา 2:19 เป๊ะ) -> เด้งกลับหน้าแรก
+      setTimeout(resetToMainMenu, 3000);
+    }
+
+    function resetToMainMenu() {
+      const ending = document.getElementById('screen-ending');
+      const overlay = document.getElementById('bg-overlay');
+      const textElement = document.getElementById('ending-text');
+      const tapHint = document.getElementById('tap-hint');
+      
+      // เตรียมหน้าแรก (Intro) รอไว้ข้างหลัง
+      showScreen('intro');
+      
+      // เอาคลาส active ออก เพื่อให้จอสีดำค่อยๆ สว่างขึ้นและเห็นหน้าแรก (CSS animation 2 วิ)
+      ending.classList.remove('active');
+      
+      // รอให้จอเฟดสว่างจนสนิท (2 วิ) แล้วเซ็ตระบบทั้งหมดกลับเป็นค่าเริ่มต้น
+      setTimeout(function() {
+        overlay.style.background = "rgba(0, 0, 0, 0.35)";
+        textElement.textContent = endingTexts[0];
+        textElement.style.opacity = '1';
+        if (tapHint) {
+          tapHint.style.display = 'block';
+        }
+        
+        // รีเซ็ตตัวแปรเพื่อพร้อมเล่นใหม่
+        endingTapCount = 1;
+        canTapEnding = true;
+        isMediaStarted = false;
+      }, 2000);
     }
 
     function showScreen(name) {
